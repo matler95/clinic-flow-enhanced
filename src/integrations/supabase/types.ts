@@ -14,13 +14,388 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_log: {
+        Row: {
+          action: string
+          actor_label: string | null
+          actor_user_id: string | null
+          created_at: string
+          id: string
+          org_id: string | null
+          target: string | null
+        }
+        Insert: {
+          action: string
+          actor_label?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          org_id?: string | null
+          target?: string | null
+        }
+        Update: {
+          action?: string
+          actor_label?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          org_id?: string | null
+          target?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drop_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          label: string
+          max_uses: number | null
+          org_id: string
+          recipient_user_id: string | null
+          revoked_at: string | null
+          token_hash: string
+          uses: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          label?: string
+          max_uses?: number | null
+          org_id: string
+          recipient_user_id?: string | null
+          revoked_at?: string | null
+          token_hash: string
+          uses?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          label?: string
+          max_uses?: number | null
+          org_id?: string
+          recipient_user_id?: string | null
+          revoked_at?: string | null
+          token_hash?: string
+          uses?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drop_links_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          declined_at: string | null
+          email: string
+          id: string
+          invited_by: string
+          org_id: string
+          role: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          declined_at?: string | null
+          email: string
+          id?: string
+          invited_by: string
+          org_id: string
+          role?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          declined_at?: string | null
+          email?: string
+          id?: string
+          invited_by?: string
+          org_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      items: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          direction: string
+          drop_link_id: string | null
+          expires_at: string
+          file_name: string
+          id: string
+          important: boolean
+          mime_type: string
+          note: string | null
+          org_id: string
+          read_at: string | null
+          recipient_user_id: string | null
+          scan_status: string
+          sender_name: string | null
+          size_bytes: number
+          storage_path: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          direction?: string
+          drop_link_id?: string | null
+          expires_at?: string
+          file_name: string
+          id?: string
+          important?: boolean
+          mime_type?: string
+          note?: string | null
+          org_id: string
+          read_at?: string | null
+          recipient_user_id?: string | null
+          scan_status?: string
+          sender_name?: string | null
+          size_bytes?: number
+          storage_path: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          direction?: string
+          drop_link_id?: string | null
+          expires_at?: string
+          file_name?: string
+          id?: string
+          important?: boolean
+          mime_type?: string
+          note?: string | null
+          org_id?: string
+          read_at?: string | null
+          recipient_user_id?: string | null
+          scan_status?: string
+          sender_name?: string | null
+          size_bytes?: number
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "items_drop_link_id_fkey"
+            columns: ["drop_link_id"]
+            isOneToOne: false
+            referencedRelation: "drop_links"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "items_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      memberships: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          org_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          org_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          org_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memberships_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications_outbox: {
+        Row: {
+          body: string
+          channel: string
+          created_at: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          channel: string
+          created_at?: string
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_at?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          last_used_at: string | null
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          last_used_at?: string | null
+          p256dh: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          last_used_at?: string | null
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      _offboard: {
+        Args: { _action: string; _actor: string; _org: string; _target: string }
+        Returns: number
+      }
+      assign_item: {
+        Args: { _doctor_id: string; _item_id: string }
+        Returns: undefined
+      }
+      consume_drop_link: { Args: { _id: string }; Returns: boolean }
+      create_organization: {
+        Args: { _kind?: string; _name: string }
+        Returns: string
+      }
+      deactivate_member: {
+        Args: { _org: string; _target_user: string }
+        Returns: number
+      }
+      has_org_role: {
+        Args: { _org: string; _role: string; _uid: string }
+        Returns: boolean
+      }
+      is_member: { Args: { _org: string; _uid: string }; Returns: boolean }
+      leave_organization: { Args: { _org: string }; Returns: undefined }
+      respond_invitation: {
+        Args: { _accept: boolean; _id: string }
+        Returns: string
+      }
+      set_member_role: {
+        Args: { _membership: string; _role: string }
+        Returns: undefined
+      }
+      shares_org: { Args: { _a: string; _b: string }; Returns: boolean }
+      transfer_item: {
+        Args: { _item_id: string; _note: string; _target_doctor: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
