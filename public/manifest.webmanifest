@@ -1,0 +1,14 @@
+{
+  "name": "DentalHub",
+  "short_name": "DentalHub",
+  "description": "Pliki ze wszystkich gabinetów w jednym inboksie.",
+  "start_url": "/inbox",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f8f8",
+  "theme_color": "#2f6b70",
+  "lang": "pl",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
