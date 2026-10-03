@@ -55,16 +55,22 @@ export async function verifyStoredObject(admin: Admin, path: string, size: numbe
 
 export const MAX_BYTES = 50 * 1024 * 1024;
 
-/** DUMMY: placeholder for Web Push (VAPID) + e-mail fallback. Only records to outbox. */
+/**
+ * M3: notify a user about a new file. Real Web Push (VAPID, content-free) to every
+ * registered device; the outbox row records the delivery result. E-mail stays a
+ * recorded fallback until an e-mail provider is connected.
+ */
 export async function sendDummyNotification(
   admin: { from: (t: string) => any },
   userId: string,
   orgName: string,
 ) {
   const body = `Nowy plik w: ${orgName}`; // no file names / patient data (G3)
+  const { pushToUser, pushConfigured } = await import("./push.server");
+  const res = await pushToUser(admin as any, userId).catch(() => ({ sent: 0, failed: 1 }));
+  const pushStatus = !pushConfigured() ? "not_configured" : res.sent > 0 ? "sent" : res.failed > 0 ? "failed" : "no_device";
   await admin.from("notifications_outbox").insert([
-    { user_id: userId, channel: "web_push", body },
-    { user_id: userId, channel: "email", body },
+    { user_id: userId, channel: "web_push", body, status: pushStatus },
+    { user_id: userId, channel: "email", body, status: "queued_no_provider" },
   ]);
-  console.log("[dummy-notify]", userId, body);
 }

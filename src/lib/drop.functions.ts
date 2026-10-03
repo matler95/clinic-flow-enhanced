@@ -90,11 +90,19 @@ export const dropComplete = createServerFn({ method: "POST" })
       await supabaseAdmin.storage.from("files").remove([data.path]);
       throw new Error("Limit wysyłek dla tego linku został wyczerpany.");
     }
+    // M2: if the addressed doctor is on a planned absence, deliver to the substitute
+    let recipient = r.link.recipient_user_id;
+    if (recipient) {
+      const { data: eff } = await supabaseAdmin.rpc("resolve_recipient", { _org: r.link.org_id, _doctor: recipient });
+      if (eff) recipient = eff as string;
+    }
+    const substituteFor = recipient && recipient !== r.link.recipient_user_id ? r.link.recipient_user_id : null;
     const { data: item, error } = await supabaseAdmin
       .from("items")
       .insert({
         org_id: r.link.org_id,
-        recipient_user_id: r.link.recipient_user_id,
+        recipient_user_id: recipient,
+        substitute_for: substituteFor,
         drop_link_id: r.link.id,
         file_name: data.fileName,
         storage_path: data.path,
@@ -113,13 +121,13 @@ export const dropComplete = createServerFn({ method: "POST" })
       action: "item.drop",
       target: item.id,
     });
-    if (r.link.recipient_user_id) {
-      await sendDummyNotification(supabaseAdmin, r.link.recipient_user_id, r.orgName);
+    if (recipient) {
+      await sendDummyNotification(supabaseAdmin, recipient, r.orgName);
     } else {
       // Clinic inbox: notify active reception/admins so someone triages it
       const { data: staff } = await supabaseAdmin
         .from("memberships").select("user_id").eq("org_id", r.link.org_id).eq("is_active", true).in("role", ["admin", "staff"]);
       for (const s of staff ?? []) await sendDummyNotification(supabaseAdmin, s.user_id, r.orgName);
     }
-    return { deliveredAt: item.created_at, recipientName: r.recipientName, orgName: r.orgName };
+    return { deliveredAt: item.created_at, recipientName: r.recipientName, orgName: r.orgName, itemId: item.id };
   });

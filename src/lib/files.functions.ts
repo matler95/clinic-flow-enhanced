@@ -22,6 +22,8 @@ export const getFileUrl = createServerFn({ method: "POST" })
     // Silent refreshes (viewer kept open) neither re-mark nor re-audit — one entry per viewing session.
     if (!data.refresh) {
       if (!item.read_at) await context.supabase.from("items").update({ read_at: new Date().toISOString() }).eq("id", item.id);
+      // Delivery receipt for the sender ("otwarto"), protected column — service role only
+      await supabaseAdmin.from("items").update({ first_opened_at: new Date().toISOString() }).eq("id", item.id).is("first_opened_at", null);
       await supabaseAdmin.from("audit_log").insert({
         org_id: item.org_id,
         actor_user_id: context.userId,
@@ -204,19 +206,23 @@ async function notify(userId: string, orgId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { pushToUser } = await import("./push.server");
   const { data: org } = await supabaseAdmin.from("organizations").select("name").eq("id", orgId).maybeSingle();
-  console.log("[notify]", userId, org?.name);
+  void org;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await pushToUser(supabaseAdmin as any, userId).catch(() => undefined);
+  const res = await pushToUser(supabaseAdmin as any, userId).catch(() => ({ sent: 0, failed: 1 }));
+  // Mark the outbox row written by the RPC with the real delivery result
+  const { data: row } = await supabaseAdmin.from("notifications_outbox").select("id").eq("user_id", userId).eq("status", "pending").order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (row) await supabaseAdmin.from("notifications_outbox").update({ status: res.sent > 0 ? "sent" : res.failed > 0 ? "failed" : "no_device" }).eq("id", row.id);
 }
 
 export const assignItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ itemId: z.string().uuid(), doctorId: z.string().uuid(), orgId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.rpc("assign_item", { _item_id: data.itemId, _doctor_id: data.doctorId });
+    const { data: eff, error } = await context.supabase.rpc("assign_item", { _item_id: data.itemId, _doctor_id: data.doctorId });
     if (error) throw new Error(error.message);
-    await notify(data.doctorId, data.orgId);
-    return { ok: true };
+    const recipient = (eff as string | null) ?? data.doctorId;
+    await notify(recipient, data.orgId);
+    return { ok: true, substituted: recipient !== data.doctorId };
   });
 
 export const transferItem = createServerFn({ method: "POST" })
