@@ -151,6 +151,7 @@ export type Database = {
           drop_link_id: string | null
           expires_at: string
           file_name: string
+          first_opened_at: string | null
           id: string
           important: boolean
           mime_type: string
@@ -162,6 +163,7 @@ export type Database = {
           sender_name: string | null
           size_bytes: number
           storage_path: string
+          substitute_for: string | null
         }
         Insert: {
           archived_at?: string | null
@@ -170,6 +172,7 @@ export type Database = {
           drop_link_id?: string | null
           expires_at?: string
           file_name: string
+          first_opened_at?: string | null
           id?: string
           important?: boolean
           mime_type?: string
@@ -181,6 +184,7 @@ export type Database = {
           sender_name?: string | null
           size_bytes?: number
           storage_path: string
+          substitute_for?: string | null
         }
         Update: {
           archived_at?: string | null
@@ -189,6 +193,7 @@ export type Database = {
           drop_link_id?: string | null
           expires_at?: string
           file_name?: string
+          first_opened_at?: string | null
           id?: string
           important?: boolean
           mime_type?: string
@@ -200,6 +205,7 @@ export type Database = {
           sender_name?: string | null
           size_bytes?: number
           storage_path?: string
+          substitute_for?: string | null
         }
         Relationships: [
           {
@@ -355,6 +361,53 @@ export type Database = {
         }
         Relationships: []
       }
+      substitutions: {
+        Row: {
+          absent_user_id: string
+          cancelled_at: string | null
+          created_at: string
+          created_by: string
+          ends_at: string
+          id: string
+          org_id: string
+          reason: string | null
+          starts_at: string
+          substitute_user_id: string
+        }
+        Insert: {
+          absent_user_id: string
+          cancelled_at?: string | null
+          created_at?: string
+          created_by: string
+          ends_at: string
+          id?: string
+          org_id: string
+          reason?: string | null
+          starts_at: string
+          substitute_user_id: string
+        }
+        Update: {
+          absent_user_id?: string
+          cancelled_at?: string | null
+          created_at?: string
+          created_by?: string
+          ends_at?: string
+          id?: string
+          org_id?: string
+          reason?: string | null
+          starts_at?: string
+          substitute_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "substitutions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -366,11 +419,23 @@ export type Database = {
       }
       assign_item: {
         Args: { _doctor_id: string; _item_id: string }
-        Returns: undefined
+        Returns: string
       }
+      cancel_substitution: { Args: { _id: string }; Returns: undefined }
       consume_drop_link: { Args: { _id: string }; Returns: boolean }
       create_organization: {
         Args: { _kind?: string; _name: string }
+        Returns: string
+      }
+      create_substitution: {
+        Args: {
+          _absent: string
+          _ends: string
+          _org: string
+          _reason: string
+          _starts: string
+          _substitute: string
+        }
         Returns: string
       }
       deactivate_member: {
@@ -383,6 +448,10 @@ export type Database = {
       }
       is_member: { Args: { _org: string; _uid: string }; Returns: boolean }
       leave_organization: { Args: { _org: string }; Returns: undefined }
+      resolve_recipient: {
+        Args: { _doctor: string; _org: string }
+        Returns: string
+      }
       respond_invitation: {
         Args: { _accept: boolean; _id: string }
         Returns: string
